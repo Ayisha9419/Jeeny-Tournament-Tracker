@@ -8,143 +8,168 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-    h2 {
-      margin-top: 40px;
-    }
     table {
-      border-collapse: collapse;
       width: 100%;
+      border-collapse: collapse;
       margin-bottom: 30px;
     }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
     th, td {
-      padding: 10px;
+      border: 1px solid #ccc;
+      padding: 8px;
       text-align: center;
     }
     input[type="number"] {
-      width: 50px;
+      width: 60px;
+    }
+    h2 {
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
 
-<h1>Tournament Score Entry & Standings</h1>
+<h1>Tournament Tracker</h1>
 
-<h2>Enter Scores</h2>
-<table id="scoreTable">
-  <tr>
-    <th>Time</th>
-    <th>Match</th>
-    <th>Court</th>
-    <th>Team A</th>
-    <th>Team B</th>
-    <th>Score A</th>
-    <th>Score B</th>
-  </tr>
-</table>
-
-<h2>Standings</h2>
-<table id="standingsTable">
-  <tr>
-    <th>Team</th>
-    <th>Wins</th>
-    <th>Losses</th>
-    <th>Next Match</th>
-    <th>Court</th>
-  </tr>
-</table>
+<div id="schedule"></div>
 
 <script>
-  const matches = [
-    { time: "6:00–6:20", court: "Court 1", teamA: "Riham & Jacobeth", teamB: "Saif & Ayisha" },
-    { time: "6:00–6:20", court: "Court 2", teamA: "Hammad & Amanda", teamB: "Yasser Alonzi & Hamid Hassan" },
-    { time: "6:20–6:40", court: "Court 1", teamA: "Fares & Muhammad Seraj", teamB: "Farhan Kazim & Ahmed Almutairi" },
-    { time: "6:20–6:40", court: "Court 2", teamA: "Harris Mahboob & Lukas", teamB: "Faisal Manaa & Fahad Alsulaiman" },
-    { time: "6:40–7:00", court: "Court 1", teamA: "Fahadulla & Dalia Abuzeid", teamB: "Khaled Alsaif & Yazeed Alanezi" },
-    { time: "6:40–7:00", court: "Court 2", teamA: "Nawaf Alfadhl & Khalid Alqhtani", teamB: "Ans Ali & Saim Shibli" },
-    // Add group/semi/final as needed
-  ];
+const knockoutMatches = [
+  { round: 'Knockout', id: 'K1', teamA: 'Riham & Jacobeth', teamB: 'Saif & Ayisha', court: 'Court 1' },
+  { round: 'Knockout', id: 'K2', teamA: 'Hammad & Amanda', teamB: 'Yasser & Hamid', court: 'Court 2' },
+  { round: 'Knockout', id: 'K3', teamA: 'Fares & Seraj', teamB: 'Farhan & Ahmed', court: 'Court 1' },
+  { round: 'Knockout', id: 'K4', teamA: 'Harris & Lukas', teamB: 'Faisal & Fahad', court: 'Court 2' },
+  { round: 'Knockout', id: 'K5', teamA: 'Fahadulla & Dalia', teamB: 'Khaled & Yazeed', court: 'Court 1' },
+  { round: 'Knockout', id: 'K6', teamA: 'Nawaf & Khalid', teamB: 'Ans & Saim', court: 'Court 2' },
+];
 
-  const scores = {};
-  const standings = {};
+const round2Matches = [
+  { round: 'Group A', id: 'G1', teamA: '', teamB: '', court: 'Court 1' },
+  { round: 'Group A', id: 'G2', teamA: '', teamB: '', court: 'Court 1' },
+  { round: 'Group B', id: 'G3', teamA: '', teamB: '', court: 'Court 2' },
+  { round: 'Group B', id: 'G4', teamA: '', teamB: '', court: 'Court 2' },
+];
 
-  function updateScoreTable() {
-    const table = document.getElementById('scoreTable');
+const semis = [
+  { round: 'Semi-final', id: 'S1', teamA: '', teamB: '', court: 'Court 1' },
+  { round: 'Semi-final', id: 'S2', teamA: '', teamB: '', court: 'Court 2' },
+];
+
+const finalMatch = [
+  { round: 'Final', id: 'F1', teamA: '', teamB: '', court: 'Court 1' }
+];
+
+const allMatches = [...knockoutMatches, ...round2Matches, ...semis, ...finalMatch];
+
+const groupA = [];
+const groupB = [];
+const groupScores = {};
+
+// Create match table
+function renderSchedule() {
+  const container = document.getElementById('schedule');
+  container.innerHTML = '';
+
+  const grouped = {};
+  allMatches.forEach(m => {
+    if (!grouped[m.round]) grouped[m.round] = [];
+    grouped[m.round].push(m);
+  });
+
+  for (let round in grouped) {
+    const matches = grouped[round];
+    const table = document.createElement('table');
+    const header = document.createElement('h2');
+    header.textContent = round;
+    container.appendChild(header);
+
+    const thead = `
+      <tr>
+        <th>Match</th>
+        <th>Team A</th>
+        <th>Team B</th>
+        <th>Court</th>
+        <th>Score A</th>
+        <th>Score B</th>
+      </tr>
+    `;
+    table.innerHTML = thead;
+
     matches.forEach((match, i) => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${match.time}</td>
-        <td>Match ${i + 1}</td>
+        <td>${match.id}</td>
+        <td id="teamA-${match.id}">${match.teamA || ''}</td>
+        <td id="teamB-${match.id}">${match.teamB || ''}</td>
         <td>${match.court}</td>
-        <td>${match.teamA}</td>
-        <td>${match.teamB}</td>
-        <td><input type="number" min="0" id="scoreA-${i}" onchange="recordScore(${i})"></td>
-        <td><input type="number" min="0" id="scoreB-${i}" onchange="recordScore(${i})"></td>
+        <td><input type="number" id="scoreA-${match.id}" ${match.teamA && match.teamB ? '' : 'disabled'} onchange="submitScore('${match.id}')"></td>
+        <td><input type="number" id="scoreB-${match.id}" ${match.teamA && match.teamB ? '' : 'disabled'} onchange="submitScore('${match.id}')"></td>
       `;
       table.appendChild(row);
     });
+
+    container.appendChild(table);
+  }
+}
+
+function submitScore(matchId) {
+  const match = allMatches.find(m => m.id === matchId);
+  const scoreA = parseInt(document.getElementById(`scoreA-${matchId}`).value);
+  const scoreB = parseInt(document.getElementById(`scoreB-${matchId}`).value);
+
+  if (isNaN(scoreA) || isNaN(scoreB)) return;
+
+  if (match.round === 'Knockout') {
+    const winner = scoreA > scoreB ? match.teamA : match.teamB;
+
+    if (groupA.length < 2) groupA.push(winner);
+    else groupB.push(winner);
+
+    populateRound2();
   }
 
-  function recordScore(i) {
-    const scoreA = parseInt(document.getElementById(`scoreA-${i}`).value || 0);
-    const scoreB = parseInt(document.getElementById(`scoreB-${i}`).value || 0);
-    const match = matches[i];
+  if (match.round.includes('Group')) {
+    [match.teamA, match.teamB].forEach((team, i) => {
+      if (!groupScores[team]) groupScores[team] = 0;
+      groupScores[team] += i === 0 ? scoreA : scoreB;
+    });
 
-    if (!standings[match.teamA]) standings[match.teamA] = { wins: 0, losses: 0, next: '' };
-    if (!standings[match.teamB]) standings[match.teamB] = { wins: 0, losses: 0, next: '' };
-
-    if (scoreA > scoreB) {
-      standings[match.teamA].wins++;
-      standings[match.teamB].losses++;
-    } else if (scoreB > scoreA) {
-      standings[match.teamB].wins++;
-      standings[match.teamA].losses++;
-    }
-
-    // Update next match info (placeholder logic, enhance based on rules)
-    standings[match.teamA].next = findNextMatch(match.teamA);
-    standings[match.teamB].next = findNextMatch(match.teamB);
-
-    updateStandings();
+    if (Object.keys(groupScores).length >= 4) checkForSemis();
   }
 
-  function findNextMatch(team) {
-    for (let match of matches) {
-      if ((match.teamA === team || match.teamB === team) &&
-          (!scores[match.teamA + match.teamB])) {
-        return `${match.time} (${match.court})`;
-      }
-    }
-    return 'Done';
+  if (match.round === 'Semi-final') {
+    const winner = scoreA > scoreB ? match.teamA : match.teamB;
+    if (!finalMatch[0].teamA) finalMatch[0].teamA = winner;
+    else finalMatch[0].teamB = winner;
   }
 
-  function updateStandings() {
-    const table = document.getElementById('standingsTable');
-    table.innerHTML = `
-      <tr>
-        <th>Team</th>
-        <th>Wins</th>
-        <th>Losses</th>
-        <th>Next Match</th>
-        <th>Court</th>
-      </tr>
-    `;
-    for (let team in standings) {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${team}</td>
-        <td>${standings[team].wins}</td>
-        <td>${standings[team].losses}</td>
-        <td>${standings[team].next}</td>
-        <td>${standings[team].next?.split("(")[1]?.replace(")", "") || ""}</td>
-      `;
-      table.appendChild(row);
-    }
-  }
+  renderSchedule();
+}
 
-  updateScoreTable();
+function populateRound2() {
+  // Group A
+  round2Matches[0].teamA = groupA[0];
+  round2Matches[0].teamB = groupA[1];
+  round2Matches[1].teamA = groupA[1];
+  round2Matches[1].teamB = groupA[0];
+
+  // Group B
+  round2Matches[2].teamA = groupB[0];
+  round2Matches[2].teamB = groupB[1];
+  round2Matches[3].teamA = groupB[1];
+  round2Matches[3].teamB = groupB[0];
+}
+
+function checkForSemis() {
+  const sortedA = groupA.slice().sort((a, b) => groupScores[b] - groupScores[a]);
+  const sortedB = groupB.slice().sort((a, b) => groupScores[b] - groupScores[a]);
+
+  semis[0].teamA = sortedA[0];
+  semis[0].teamB = sortedB[1];
+  semis[1].teamA = sortedB[0];
+  semis[1].teamB = sortedA[1];
+}
+
+renderSchedule();
 </script>
 
 </body>
