@@ -48,8 +48,10 @@ const knockoutMatches = [
 const round2Matches = [
   { round: 'Group A', id: 'G1', teamA: '', teamB: '', court: 'Court 1' },
   { round: 'Group A', id: 'G2', teamA: '', teamB: '', court: 'Court 1' },
-  { round: 'Group B', id: 'G3', teamA: '', teamB: '', court: 'Court 2' },
+  { round: 'Group A', id: 'G3', teamA: '', teamB: '', court: 'Court 1' },
   { round: 'Group B', id: 'G4', teamA: '', teamB: '', court: 'Court 2' },
+  { round: 'Group B', id: 'G5', teamA: '', teamB: '', court: 'Court 2' },
+  { round: 'Group B', id: 'G6', teamA: '', teamB: '', court: 'Court 2' },
 ];
 
 const semis = [
@@ -63,9 +65,43 @@ const finalMatch = [
 
 const allMatches = [...knockoutMatches, ...round2Matches, ...semis, ...finalMatch];
 
-const groupA = [];
-const groupB = [];
-const groupScores = {};
+let groupA = [];
+let groupB = [];
+let groupScores = {};
+
+// Load saved scores from localStorage
+function loadScores() {
+  const savedScores = JSON.parse(localStorage.getItem('tournamentScores'));
+  if (savedScores) {
+    groupA = savedScores.groupA || [];
+    groupB = savedScores.groupB || [];
+    groupScores = savedScores.groupScores || {};
+    allMatches.forEach(match => {
+      const scoreData = savedScores[match.id];
+      if (scoreData) {
+        match.scoreA = scoreData.scoreA;
+        match.scoreB = scoreData.scoreB;
+      }
+    });
+  }
+}
+
+// Save scores to localStorage
+function saveScores() {
+  const scoresToSave = {
+    groupA,
+    groupB,
+    groupScores,
+  };
+
+  allMatches.forEach(match => {
+    if (match.scoreA !== undefined && match.scoreB !== undefined) {
+      scoresToSave[match.id] = { scoreA: match.scoreA, scoreB: match.scoreB };
+    }
+  });
+
+  localStorage.setItem('tournamentScores', JSON.stringify(scoresToSave));
+}
 
 // Create match table
 function renderSchedule() {
@@ -169,22 +205,26 @@ function submitScore(matchId) {
     else finalMatch[0].teamB = winner;
   }
 
+  saveScores(); // Save to localStorage
   renderSchedule();
 }
 
 function populateRound2() {
-  if (groupA.length === 2) {
-    round2Matches[0].teamA = groupA[0];
-    round2Matches[0].teamB = groupA[1];
-    round2Matches[1].teamA = groupA[1];
-    round2Matches[1].teamB = groupA[0];
-  }
-  if (groupB.length === 2) {
-    round2Matches[2].teamA = groupB[0];
-    round2Matches[2].teamB = groupB[1];
-    round2Matches[3].teamA = groupB[1];
-    round2Matches[3].teamB = groupB[0];
-  }
+  // Group A - Winners from Court 1
+  round2Matches[0].teamA = groupA[0];
+  round2Matches[0].teamB = groupA[1];
+  round2Matches[1].teamA = groupA[0];
+  round2Matches[1].teamB = groupA[2];
+  round2Matches[2].teamA = groupA[1];
+  round2Matches[2].teamB = groupA[2];
+
+  // Group B - Winners from Court 2
+  round2Matches[3].teamA = groupB[0];
+  round2Matches[3].teamB = groupB[1];
+  round2Matches[4].teamA = groupB[0];
+  round2Matches[4].teamB = groupB[2];
+  round2Matches[5].teamA = groupB[1];
+  round2Matches[5].teamB = groupB[2];
 }
 
 function checkForSemis() {
@@ -197,7 +237,8 @@ function checkForSemis() {
   semis[1].teamB = sortedA[1];
 }
 
-renderSchedule();
+loadScores(); // Load saved scores from localStorage
+renderSchedule(); // Render the schedule with saved scores
 </script>
 
 </body>
