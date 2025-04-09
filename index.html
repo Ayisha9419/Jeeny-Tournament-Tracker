@@ -25,11 +25,11 @@ let teamAssignments = {};
 
 const knockoutMatches = [
   { round: 'Knockout', id: 'K1', teamA: 'Riham & Jacobeth', teamB: 'Saif & Ayisha', court: 'Court 1' },
-  { round: 'K2', id: 'K2', teamA: 'Hammad & Amanda', teamB: 'Yasser & Hamid', court: 'Court 2' },
-  { round: 'K3', id: 'K3', teamA: 'Fares & Seraj', teamB: 'Farhan & Ahmed', court: 'Court 1' },
-  { round: 'K4', id: 'K4', teamA: 'Harris & Lukas', teamB: 'Faisal & Fahad', court: 'Court 2' },
-  { round: 'K5', id: 'K5', teamA: 'Fahadulla & Dalia', teamB: 'Khaled & Yazeed', court: 'Court 1' },
-  { round: 'K6', id: 'K6', teamA: 'Nawaf & Khalid', teamB: 'Ans & Saim', court: 'Court 2' },
+  { round: 'Knockout', id: 'K2', teamA: 'Hammad & Amanda', teamB: 'Yasser & Hamid', court: 'Court 2' },
+  { round: 'Knockout', id: 'K3', teamA: 'Fares & Seraj', teamB: 'Farhan & Ahmed', court: 'Court 1' },
+  { round: 'Knockout', id: 'K4', teamA: 'Harris & Lukas', teamB: 'Faisal & Fahad', court: 'Court 2' },
+  { round: 'Knockout', id: 'K5', teamA: 'Fahadulla & Dalia', teamB: 'Khaled & Yazeed', court: 'Court 1' },
+  { round: 'Knockout', id: 'K6', teamA: 'Nawaf & Khalid', teamB: 'Ans & Saim', court: 'Court 2' },
 ];
 
 const round2Matches = [
@@ -155,9 +155,9 @@ function submitScore(id) {
 
   if (match.round === 'Knockout') {
     const winner = scoreA > scoreB ? match.teamA : match.teamB;
-    const courtGroup = match.court === 'Court 1' ? groupA : groupB;
-    if (!courtGroup.includes(winner)) courtGroup.push(winner);
-    fillGroupMatches();
+    const group = match.court === 'Court 1' ? groupA : groupB;
+    if (!group.includes(winner)) group.push(winner);
+    fillGroupMatchesFromKnockout(); // <- NEW
   }
 
   if (match.round.includes('Group')) {
@@ -178,7 +178,7 @@ function submitScore(id) {
   renderSchedule();
 }
 
-function fillGroupMatches() {
+function fillGroupMatchesFromKnockout() {
   if (groupA.length === 3 && !teamAssignments.groupA) {
     teamAssignments.groupA = [...groupA];
     round2Matches[0].teamA = groupA[0]; round2Matches[0].teamB = groupA[1];
@@ -203,8 +203,9 @@ function fillSemis() {
   }
 }
 
+// INIT
 loadState();
-fillGroupMatches();
+fillGroupMatchesFromKnockout();
 fillSemis();
 renderSchedule();
 </script>
