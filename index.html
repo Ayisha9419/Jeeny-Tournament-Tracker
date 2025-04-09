@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tournament Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    input[type="number"] {
+      width: 50px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Tournament Score Entry & Standings</h1>
+
+<h2>Enter Scores</h2>
+<table id="scoreTable">
+  <tr>
+    <th>Time</th>
+    <th>Match</th>
+    <th>Court</th>
+    <th>Team A</th>
+    <th>Team B</th>
+    <th>Score A</th>
+    <th>Score B</th>
+  </tr>
+</table>
+
+<h2>Standings</h2>
+<table id="standingsTable">
+  <tr>
+    <th>Team</th>
+    <th>Wins</th>
+    <th>Losses</th>
+    <th>Next Match</th>
+    <th>Court</th>
+  </tr>
+</table>
+
+<script>
+  const matches = [
+    { time: "6:00–6:20", court: "Court 1", teamA: "Riham & Jacobeth", teamB: "Saif & Ayisha" },
+    { time: "6:00–6:20", court: "Court 2", teamA: "Hammad & Amanda", teamB: "Yasser Alonzi & Hamid Hassan" },
+    { time: "6:20–6:40", court: "Court 1", teamA: "Fares & Muhammad Seraj", teamB: "Farhan Kazim & Ahmed Almutairi" },
+    { time: "6:20–6:40", court: "Court 2", teamA: "Harris Mahboob & Lukas", teamB: "Faisal Manaa & Fahad Alsulaiman" },
+    { time: "6:40–7:00", court: "Court 1", teamA: "Fahadulla & Dalia Abuzeid", teamB: "Khaled Alsaif & Yazeed Alanezi" },
+    { time: "6:40–7:00", court: "Court 2", teamA: "Nawaf Alfadhl & Khalid Alqhtani", teamB: "Ans Ali & Saim Shibli" },
+    // Add group/semi/final as needed
+  ];
+
+  const scores = {};
+  const standings = {};
+
+  function updateScoreTable() {
+    const table = document.getElementById('scoreTable');
+    matches.forEach((match, i) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${match.time}</td>
+        <td>Match ${i + 1}</td>
+        <td>${match.court}</td>
+        <td>${match.teamA}</td>
+        <td>${match.teamB}</td>
+        <td><input type="number" min="0" id="scoreA-${i}" onchange="recordScore(${i})"></td>
+        <td><input type="number" min="0" id="scoreB-${i}" onchange="recordScore(${i})"></td>
+      `;
+      table.appendChild(row);
+    });
+  }
+
+  function recordScore(i) {
+    const scoreA = parseInt(document.getElementById(`scoreA-${i}`).value || 0);
+    const scoreB = parseInt(document.getElementById(`scoreB-${i}`).value || 0);
+    const match = matches[i];
+
+    if (!standings[match.teamA]) standings[match.teamA] = { wins: 0, losses: 0, next: '' };
+    if (!standings[match.teamB]) standings[match.teamB] = { wins: 0, losses: 0, next: '' };
+
+    if (scoreA > scoreB) {
+      standings[match.teamA].wins++;
+      standings[match.teamB].losses++;
+    } else if (scoreB > scoreA) {
+      standings[match.teamB].wins++;
+      standings[match.teamA].losses++;
+    }
+
+    // Update next match info (placeholder logic, enhance based on rules)
+    standings[match.teamA].next = findNextMatch(match.teamA);
+    standings[match.teamB].next = findNextMatch(match.teamB);
+
+    updateStandings();
+  }
+
+  function findNextMatch(team) {
+    for (let match of matches) {
+      if ((match.teamA === team || match.teamB === team) &&
+          (!scores[match.teamA + match.teamB])) {
+        return `${match.time} (${match.court})`;
+      }
+    }
+    return 'Done';
+  }
+
+  function updateStandings() {
+    const table = document.getElementById('standingsTable');
+    table.innerHTML = `
+      <tr>
+        <th>Team</th>
+        <th>Wins</th>
+        <th>Losses</th>
+        <th>Next Match</th>
+        <th>Court</th>
+      </tr>
+    `;
+    for (let team in standings) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${team}</td>
+        <td>${standings[team].wins}</td>
+        <td>${standings[team].losses}</td>
+        <td>${standings[team].next}</td>
+        <td>${standings[team].next?.split("(")[1]?.replace(")", "") || ""}</td>
+      `;
+      table.appendChild(row);
+    }
+  }
+
+  updateScoreTable();
+</script>
+
+</body>
+</html>
